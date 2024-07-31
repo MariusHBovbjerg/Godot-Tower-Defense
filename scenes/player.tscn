@@ -1,0 +1,33 @@
+[gd_scene load_steps=5 format=3 uid="uid://dgxjv3ebxks1h"]
+
+[ext_resource type="Script" path="res://scripts/Player.cs" id="1_veqy6"]
+[ext_resource type="PackedScene" uid="uid://dknl0dv0ec8vv" path="res://scenes/bullet.tscn" id="2_jon4r"]
+[ext_resource type="Texture2D" uid="uid://bi7gnq83e5r2d" path="res://art/tower.png" id="2_u2635"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_mh2fn"]
+radius = 24.0
+
+[node name="Player" type="RigidBody2D"]
+position = Vector2(360, 540)
+mass = 10000.0
+gravity_scale = 0.0
+freeze = true
+freeze_mode = 1
+custom_integrator = true
+max_contacts_reported = 1000000
+contact_monitor = true
+script = ExtResource("1_veqy6")
+BulletScene = ExtResource("2_jon4r")
+metadata/_edit_group_ = true
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_u2635")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_mh2fn")
+
+[node name="ShootingTimer" type="Timer" parent="."]
+one_shot = true
+
+[connection signal="body_entered" from="." to="." method="OnBodyEntered"]
+[connection signal="timeout" from="ShootingTimer" to="." method="OnShootingTimerTimeout"]

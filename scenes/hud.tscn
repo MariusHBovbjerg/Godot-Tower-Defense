@@ -1,0 +1,76 @@
+[gd_scene load_steps=3 format=3 uid="uid://byfn0xn6w0rbq"]
+
+[ext_resource type="Script" path="res://scripts/HUD.cs" id="1_adp04"]
+[ext_resource type="FontFile" uid="uid://buxnkr0lkr3l1" path="res://font/Xolonium-Regular.ttf" id="2_7fegc"]
+
+[node name="Hud" type="CanvasLayer"]
+script = ExtResource("1_adp04")
+
+[node name="Coin" type="Label" parent="."]
+offset_top = 78.0
+offset_right = 120.0
+offset_bottom = 156.0
+theme_override_fonts/font = ExtResource("2_7fegc")
+theme_override_font_sizes/font_size = 64
+text = "0"
+
+[node name="Cash" type="Label" parent="."]
+offset_right = 120.0
+offset_bottom = 78.0
+theme_override_fonts/font = ExtResource("2_7fegc")
+theme_override_font_sizes/font_size = 64
+text = "0"
+
+[node name="Health" type="Label" parent="."]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -78.0
+offset_right = 133.0
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("2_7fegc")
+theme_override_font_sizes/font_size = 64
+text = "0"
+horizontal_alignment = 1
+
+[node name="Message" type="Label" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -120.0
+offset_right = 200.0
+offset_bottom = 50.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("2_7fegc")
+theme_override_font_sizes/font_size = 64
+text = "Dodge the creeps!"
+horizontal_alignment = 1
+autowrap_mode = 2
+metadata/_edit_use_anchors_ = true
+
+[node name="StartButton" type="Button" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -211.0
+offset_top = -86.0
+offset_right = 211.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("2_7fegc")
+theme_override_font_sizes/font_size = 64
+text = "Start"
+metadata/_edit_use_anchors_ = true
+
+[node name="MessageTimer" type="Timer" parent="."]
+wait_time = 2.0
+one_shot = true
+
+[connection signal="pressed" from="StartButton" to="." method="OnStartButtonPressed"]
+[connection signal="timeout" from="MessageTimer" to="." method="OnMessageTimerTimeout"]
