@@ -18,20 +18,20 @@ public partial class Main : Node
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
-		_hud.UpdateDetails(_player);
+		_hud.UpdateDetails();
 	}
 
-	public void GameOver()
+	public void InitializeNewRound()
+	{
+		_player.InitializeNewRound();
+		_hud.InitializeNewRound();
+		GetNode<Timer>("StartTimer").Start();
+	}
+
+	public void StopRound()
 	{
 		_hud.ShowGameOver();
 		GetNode<Timer>("MobTimer").Stop();
-	}
-
-	public void NewGame()
-	{
-		_player.Start();
-
-		GetNode<Timer>("StartTimer").Start();
 	}
 
 	private void OnMobTimerTimeout()
@@ -68,6 +68,6 @@ public partial class Main : Node
 
 	private void OnStartGame()
 	{
-		NewGame();
+		InitializeNewRound();
 	}
 }

@@ -31,7 +31,7 @@ curve = SubResource("Curve2D_kfaeb")
 
 [node name="HUD" parent="." instance=ExtResource("1_hwn2n")]
 
-[connection signal="Death" from="Player" to="." method="GameOver"]
+[connection signal="Death" from="Player" to="." method="StopRound"]
 [connection signal="timeout" from="MobTimer" to="." method="OnMobTimerTimeout"]
 [connection signal="timeout" from="StartTimer" to="." method="OnStartTimerTimeout"]
 [connection signal="StartGame" from="HUD" to="." method="OnStartGame"]

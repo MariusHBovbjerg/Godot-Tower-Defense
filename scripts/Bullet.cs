@@ -3,17 +3,18 @@ using System;
 
 public partial class Bullet : RigidBody2D
 {
-	public void ConfigureBullet(double damage, int speed, Godot.Vector2 position, Mob target)
+	public void ConfigureBullet(double damage, float speed, Godot.Vector2 position, Mob target)
 	{
+		if (!IsInstanceValid(target))
+			Free();
 		this.damage = damage;
 		this.speed = speed;
 		Position = position;
 		this.target = target;
 	}
 
-
-	private double damage;
-	private int speed;
+	public double damage;
+	public float speed;
 
 	public Mob target;
 
@@ -25,6 +26,8 @@ public partial class Bullet : RigidBody2D
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
+		if (!IsInstanceValid(target))
+			Free();
 	}
 
 	public override void _IntegrateForces(PhysicsDirectBodyState2D state)
@@ -32,14 +35,19 @@ public partial class Bullet : RigidBody2D
 		if (target != null)
 		{
 			Vector2 direction = (target.GlobalPosition - GlobalPosition).Normalized();
-			state.LinearVelocity = direction * speed;
+
+			state.LinearVelocity = direction * (float)speed;
 		}
 	}
 
-	private void OnEnteredBody(Mob body)
+	private void OnEnteredBody(Node2D body)
 	{
+		if (body is not Mob)
+			return;
+
 		QueueFree();
-		body.TakeDamage(damage);
+		if (IsInstanceValid(body))
+			(body as Mob).TakeDamage(damage);
 	}
 }
 

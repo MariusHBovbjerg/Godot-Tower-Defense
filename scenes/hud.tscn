@@ -21,17 +21,39 @@ theme_override_fonts/font = ExtResource("2_7fegc")
 theme_override_font_sizes/font_size = 64
 text = "0"
 
-[node name="Health" type="Label" parent="."]
+[node name="PlayerStatView" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_top = 660.0
+offset_right = 40.0
+offset_bottom = 700.0
+
+[node name="Health" type="Label" parent="PlayerStatView"]
+layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_top = -78.0
+offset_top = -40.0
 offset_right = 133.0
+offset_bottom = -1.0
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("2_7fegc")
-theme_override_font_sizes/font_size = 64
+theme_override_font_sizes/font_size = 32
 text = "0"
-horizontal_alignment = 1
+
+[node name="Damage" type="Label" parent="PlayerStatView"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 133.0
+offset_top = -40.0
+offset_right = 266.0
+offset_bottom = 38.0
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("2_7fegc")
+theme_override_font_sizes/font_size = 32
+text = "0"
 
 [node name="Message" type="Label" parent="."]
 anchors_preset = 8
@@ -59,8 +81,9 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -211.0
-offset_top = -86.0
+offset_top = -180.0
 offset_right = 211.0
+offset_bottom = -94.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("2_7fegc")
@@ -71,6 +94,24 @@ metadata/_edit_use_anchors_ = true
 [node name="MessageTimer" type="Timer" parent="."]
 wait_time = 2.0
 one_shot = true
+
+[node name="UpgradeMenu" type="ScrollContainer" parent="."]
+offset_left = 4.0
+offset_top = 700.0
+offset_right = 716.0
+offset_bottom = 1080.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UpgradeMenu"]
+layout_mode = 2
+
+[node name="UpgradeColumn1" type="VBoxContainer" parent="UpgradeMenu/HBoxContainer"]
+layout_mode = 2
+
+[node name="UpgradeColumn2" type="VBoxContainer" parent="UpgradeMenu/HBoxContainer"]
+layout_mode = 2
+
+[node name="UpgradeColumn3" type="VBoxContainer" parent="UpgradeMenu/HBoxContainer"]
+layout_mode = 2
 
 [connection signal="pressed" from="StartButton" to="." method="OnStartButtonPressed"]
 [connection signal="timeout" from="MessageTimer" to="." method="OnMessageTimerTimeout"]

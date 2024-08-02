@@ -8,7 +8,8 @@ size = Vector2(19, 19)
 
 [node name="Mob" type="RigidBody2D" groups=["mobs"]]
 gravity_scale = 0.0
-max_contacts_reported = 1
+continuous_cd = 1
+max_contacts_reported = 100
 contact_monitor = true
 script = ExtResource("1_x25pf")
 metadata/_edit_group_ = true

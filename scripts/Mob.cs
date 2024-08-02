@@ -5,13 +5,10 @@ public partial class Mob : RigidBody2D
 {
 	private Player _player;
 
-	public MobStats Stats = new MobStats
+	public MobStats Stats = new()
 	{
-		Health = 100,
-		Damage = 10,
-		Speed = 100,
-		CoinDropBaseValue = 10,
-		CashDropBaseValue = 10
+		CoinDropValue = 10,
+		CashDropValue = 10
 	};
 
 	public bool CanDamage = true;
@@ -20,6 +17,7 @@ public partial class Mob : RigidBody2D
 	public override void _Ready()
 	{
 		_player = GetTree().Root.GetNode("Main").GetNode<Player>("Player");
+		Stats.CurrentHealth = Stats.MaxHealth.GetValue();
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -29,13 +27,13 @@ public partial class Mob : RigidBody2D
 
 	public override void _IntegrateForces(PhysicsDirectBodyState2D state)
 	{
-		if (_player != null)
+		if (_player != null && IsInstanceValid(_player))
 		{
 			// Calculate the direction vector from the mob to the player
 			Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
 
 			// Set the mob's velocity based on the direction vector
-			state.LinearVelocity = direction * Stats.Speed;
+			state.LinearVelocity = direction * (int)Stats.Speed.GetValue();
 
 			// Rotate the mob to face the player
 			state.AngularVelocity = 0; // Stop any existing rotation
@@ -47,24 +45,25 @@ public partial class Mob : RigidBody2D
 	{
 		CanDamage = false;
 		GetNode<Timer>("DamageCooldown").Start();
-		return health - Stats.Damage;
+		return health - Stats.Damage.GetValue();
 	}
 
 	public void TakeDamage(double damage)
 	{
-		Stats.Health -= damage;
-		if (Stats.Health <= 0)
+		Stats.CurrentHealth -= damage;
+		if (Stats.CurrentHealth <= 0)
 		{
 			// Add some cash and coins to the player's balance
-			_player.Stats.CashBalance += Stats.CashDropBaseValue;
-			_player.Stats.CoinBalance += Stats.CoinDropBaseValue;
+			_player.Stats.CashBalance += Stats.CashDropValue;
+			_player.Stats.CoinBalance += Stats.CoinDropValue;
 
-			QueueFree();
+			Free();
 		}
 	}
 
 	private void OnDamageCooldownTimeout()
 	{
 		CanDamage = true;
+		GD.Print($"{this} can attack again!");
 	}
 }

@@ -1,29 +1,29 @@
 using Godot;
 using System;
+using System.Linq;
 
 public partial class Player : RigidBody2D
 {
 	public PlayerStats Stats = new PlayerStats
 	{
-		Health = 100,
-		Damage = 100,
-		CashBalance = 0,
+		CashBalance = 10000,
 		CoinBalance = 0,
-		CashMultiplier = 1,
-		CoinMultiplier = 1,
-		FiringRate = 1,
-		CriticalHitChance = 0,
-		CriticalHitDamageFactor = 2,
-		Range = 100,
-		MultiShotChance = 0,
-		MultiShotCount = 2,
-		RapidFireChance = 0,
-		RapidFireDuration = 2,
-		BounceChance = 0,
-		BounceCount = 2,
-		BounceRange = 100,
-		ShotSpeed = 500
+		Damage = new Stat
+		{
+			Type = StatType.Offensive,
+			Name = "Damage",
+			StartingValue = 987,
+			UpgradeMultiplier = 10.1f,
+			StartingCost = 10,
+			CostIncreaseValue = 1.1f,
+			Level = 1,
+			MaxLevel = 10,
+			GetValueCallback = (level, startingValue, upgradeMultiplier) => startingValue * Math.Pow(upgradeMultiplier, level - 1),
+			NextLevelCostCallback = (level, cost, costIncreaseValue) => (int)(cost * Math.Pow(costIncreaseValue, level - 1))
+		},
 	};
+
+	public bool isDead { get; set; }
 
 	[Export]
 	public PackedScene BulletScene { get; set; }
@@ -34,22 +34,27 @@ public partial class Player : RigidBody2D
 	private Timer _shootingTimer;
 	private bool _canShoot = true;
 
+	public Sprite2D RangeIndicator { get; set; }
+
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		Hide();
-		Stats.isDead = true;
+		isDead = true;
 
 		_shootingTimer = GetNode<Timer>("ShootingTimer");
+		var range = Stats.Range.GetValue();
+		RangeIndicator = GetNode<Sprite2D>("RangeIndicator");
+		RangeIndicator.Scale = new Vector2((float)range / 150, (float)range / 150);
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
-		if (Stats.Health <= 0 && !Stats.isDead)
+		if (Stats.CurrentHealth <= 0 && !isDead)
 		{
 			Stats.CashBalance = 0;
-			Stats.isDead = true;
+			isDead = true;
 			Hide(); // Player disappears when it dies.
 			EmitSignal(SignalName.Death);
 			_canShoot = false;
@@ -57,24 +62,29 @@ public partial class Player : RigidBody2D
 			GetNode<CollisionShape2D>("CollisionShape2D").SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
 		}
 
-		if (_shootingTimer.WaitTime != Stats.FiringRate)
-			_shootingTimer.WaitTime = Stats.FiringRate;
+		var FiringRate = Stats.FiringRate.GetValue();
+		var inverseFiringRate = 1 / FiringRate;
+		if (_shootingTimer.WaitTime != inverseFiringRate)
+			_shootingTimer.WaitTime = inverseFiringRate;
 	}
 
-	private void OnBodyEntered(Mob body)
+	private void OnBodyEntered(Node2D body)
 	{
-		if (body.CanDamage)
-			Stats.Health = body.DoDamage(Stats.Health);
+		if (body is not Mob)
+			return;
+
+		if ((body as Mob).CanDamage)
+			Stats.CurrentHealth = (body as Mob).DoDamage(Stats.CurrentHealth);
 	}
 
-	public void Start()
+	public void InitializeNewRound()
 	{
-		Stats.Health = 100;
-		Stats.isDead = false;
+		Stats.CurrentHealth = Stats.MaxHealth.GetValue();
+		isDead = false;
 		Show();
 		GetNode<CollisionShape2D>("CollisionShape2D").Disabled = false;
 		_canShoot = true;
-		_shootingTimer.WaitTime = Stats.FiringRate;
+		_shootingTimer.WaitTime = 1 / Stats.FiringRate.GetValue();
 		_shootingTimer.Start();
 	}
 
@@ -86,14 +96,27 @@ public partial class Player : RigidBody2D
 
 		// Grab a mob from the mobs group.
 		var mobs = GetTree().GetNodesInGroup("mobs");
+		var bullets = GetTree().GetNodesInGroup("bullets");
 
 		// Find the closest mob to the player.
 		Mob mob = null;
 
 		foreach (Node node in mobs)
 		{
-			if (node is Mob mobNode)
+			if (node is Mob mobNode && IsInstanceValid(mobNode))
 			{
+				// Evaluate if mob is within player range.
+				if (mobNode.Position.DistanceTo(Position) > Stats.Range.GetValue())
+					continue;
+
+				// count how many bullets already target this mob, add their damage together and compare to the mob's health.
+				// If the mob would die, target another mob.
+				var mobHealth = mobNode.Stats.CurrentHealth;
+				var bulletDamage = bullets.Where(b => (b as Bullet).target == mobNode).Sum(b => (b as Bullet).damage);
+
+				if (mobHealth <= bulletDamage)
+					continue;
+
 				if (mob == null)
 					mob = mobNode;
 				else
@@ -111,6 +134,6 @@ public partial class Player : RigidBody2D
 		GetParent().AddChild(bullet);
 
 		Vector2 direction = (mob.Position - Position).Normalized();
-		bullet.ConfigureBullet(Stats.Damage, Stats.ShotSpeed, Position + direction * 25, mob);
+		bullet.ConfigureBullet(Stats.Damage.GetValue(), (float)Stats.ShotSpeed.GetValue(), Position + direction * 25, mob);
 	}
 }
