@@ -30,7 +30,7 @@ public class Stat
 
 	public string GetValueAsFormattedString()
 	{
-		return ToNthSuffix(GetValue());
+		return FormatThousands(GetValue());
 	}
 
 	public double NextLevelvalue()
@@ -40,7 +40,7 @@ public class Stat
 
 	public string GetNextLevelvalueAsFormattedString()
 	{
-		return ToNthSuffix(NextLevelvalue());
+		return FormatThousands(NextLevelvalue());
 	}
 
 	// Calculate the current cost to upgrade
@@ -60,13 +60,11 @@ public class Stat
 			player.Stats.CashBalance -= NextLevelCost();
 			Level++;
 			if (LevelUpCallback != null)
-			{
 				LevelUpCallback(player);
-			}
 		}
 	}
 
-	private string ToNthSuffix(double num)
+	private string FormatThousands(double num)
 	{
 		// Then, if the value is thousands, divide it by 1000 and append a K
 		// Do the same for millions, billions, etc.
