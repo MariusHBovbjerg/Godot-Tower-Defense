@@ -3,6 +3,7 @@ using System;
 
 public partial class Mob : RigidBody2D
 {
+	public static readonly string GROUP_NAME = "mobs";
 	private Player _player;
 
 	public MobStats Stats = new()
@@ -12,6 +13,27 @@ public partial class Mob : RigidBody2D
 	};
 
 	public bool CanDamage = true;
+
+	public Sprite2D Sprite;
+
+	public Timer DamageCooldown;
+
+	public Mob(Sprite2D sprite, CollisionShape2D collisionShape, Timer damageCooldown, Vector2 position)
+	{
+		Position = position;
+		AddToGroup(GROUP_NAME);
+		Sprite = sprite;
+		DamageCooldown = damageCooldown;
+		damageCooldown.Timeout += OnDamageCooldownTimeout;
+		AddChild(Sprite);
+		AddChild(collisionShape);
+		AddChild(damageCooldown);
+
+		ContinuousCd = CcdMode.CastRay;
+		ContactMonitor = true;
+		MaxContactsReported = 100;
+		GravityScale = 0;
+	}
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -30,7 +52,7 @@ public partial class Mob : RigidBody2D
 		if (_player != null && IsInstanceValid(_player))
 		{
 			// Calculate the direction vector from the mob to the player
-			Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
+			Vector2 direction = (_player.GlobalPosition - Position).Normalized();
 
 			// Set the mob's velocity based on the direction vector
 			state.LinearVelocity = direction * (int)Stats.Speed.GetValue();
@@ -44,7 +66,7 @@ public partial class Mob : RigidBody2D
 	public double DoDamage(double health)
 	{
 		CanDamage = false;
-		GetNode<Timer>("DamageCooldown").Start();
+		DamageCooldown.Start();
 		return health - Stats.Damage.GetValue();
 	}
 
@@ -57,7 +79,7 @@ public partial class Mob : RigidBody2D
 			_player.Stats.CashBalance += (int)(Stats.CashDropValue * _player.Stats.CashMultiplier.GetValue());
 			_player.Stats.CoinBalance += (int)(Stats.CoinDropValue * _player.Stats.CoinMultiplier.GetValue());
 
-			Free();
+			QueueFree();
 		}
 	}
 

@@ -115,8 +115,8 @@ public partial class Player : RigidBody2D
 
 	private Dictionary<Mob, float> FindValidMobTargets()
 	{
-		var mobs = GetTree().GetNodesInGroup("mobs");
-		var bullets = GetTree().GetNodesInGroup("bullets");
+		var mobs = GetTree().GetNodesInGroup(Mob.GROUP_NAME);
+		var bullets = GetTree().GetNodesInGroup(Bullet.GROUP_NAME);
 		Dictionary<Mob, float> mobTargets = new();
 
 		foreach (Node node in mobs)

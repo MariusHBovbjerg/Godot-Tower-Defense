@@ -1,19 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://cv1nbs485xgkx"]
+[gd_scene load_steps=4 format=3 uid="uid://cv1nbs485xgkx"]
 
 [ext_resource type="Script" path="res://scripts/Main.cs" id="1_023s5"]
 [ext_resource type="PackedScene" uid="uid://byfn0xn6w0rbq" path="res://scenes/hud.tscn" id="1_hwn2n"]
 [ext_resource type="PackedScene" uid="uid://dgxjv3ebxks1h" path="res://scenes/player.tscn" id="2_2sjoe"]
-[ext_resource type="PackedScene" uid="uid://b7j45dypjem1p" path="res://scenes/mob.tscn" id="2_3wpwr"]
-
-[sub_resource type="Curve2D" id="Curve2D_kfaeb"]
-_data = {
-"points": PackedVector2Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 720, 0, 0, 0, 0, 0, 720, 1080, 0, 0, 0, 0, 0, 1080, 0, 0, 0, 0, 0, 0)
-}
-point_count = 5
 
 [node name="Main" type="Node"]
 script = ExtResource("1_023s5")
-MobScene = ExtResource("2_3wpwr")
 
 [node name="Player" parent="." instance=ExtResource("2_2sjoe")]
 
@@ -23,11 +15,6 @@ wait_time = 0.5
 [node name="StartTimer" type="Timer" parent="."]
 wait_time = 2.0
 one_shot = true
-
-[node name="MobPath" type="Path2D" parent="."]
-curve = SubResource("Curve2D_kfaeb")
-
-[node name="MobSpawnLocation" type="PathFollow2D" parent="MobPath"]
 
 [node name="HUD" parent="." instance=ExtResource("1_hwn2n")]
 

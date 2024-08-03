@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Godot;
 
 public static class UpgradeMenu
@@ -92,12 +91,13 @@ public static class UpgradeMenu
 		};
 
 		Control upgradeComposite = CreateUpgradeComposite();
+		var isMaxLevel = entity.Level == entity.MaxLevel;
 
 		Label nameLabel = CreateLabel(entity.Name, 0);
-		Label priceLabel = CreateLabel($"${entity.NextLevelCost()}", 15);
+		Label priceLabel = CreateLabel(isMaxLevel ? "Max" : $"${entity.NextLevelCost()}", 15);
 		Label currentLevelLabel = CreateLabel($"Level: {entity.Level}", 30);
+		Button upgradeButton = CreateUpgradeButton(isMaxLevel ? $"{entity.GetValueAsFormattedString()}" : $"{entity.GetValueAsFormattedString()} -> {entity.GetNextLevelvalueAsFormattedString()}");
 
-		Button upgradeButton = CreateUpgradeButton(entity);
 		ConfigureUpgradeButton(upgradeButton, entity, player, currentLevelLabel, priceLabel);
 
 		AddUpgradeComponents(upgradeComposite, nameLabel, upgradeButton, priceLabel, currentLevelLabel);
@@ -126,11 +126,11 @@ public static class UpgradeMenu
 		};
 	}
 
-	private static Button CreateUpgradeButton(Stat entity)
+	private static Button CreateUpgradeButton(string text)
 	{
 		return new Button
 		{
-			Text = $"{entity.GetValueAsFormattedString()} -> {entity.GetNextLevelvalueAsFormattedString()}",
+			Text = text,
 			CustomMinimumSize = new Vector2(100, 50),
 			OffsetTop = 0,
 			OffsetLeft = 100,

@@ -3,10 +3,12 @@ using System;
 
 public partial class Bullet : RigidBody2D
 {
-	public void ConfigureBullet(double damage, float speed, Godot.Vector2 position, Mob target)
+	public static readonly string GROUP_NAME = "bullets";
+	public void ConfigureBullet(double damage, float speed, Vector2 position, Mob target)
 	{
 		if (!IsInstanceValid(target))
-			Free();
+			QueueFree();
+
 		this.damage = damage;
 		this.speed = speed;
 		Position = position;
@@ -27,16 +29,16 @@ public partial class Bullet : RigidBody2D
 	public override void _Process(double delta)
 	{
 		if (!IsInstanceValid(target))
-			Free();
+			QueueFree();
 	}
 
 	public override void _IntegrateForces(PhysicsDirectBodyState2D state)
 	{
 		if (target != null)
 		{
-			Vector2 direction = (target.GlobalPosition - GlobalPosition).Normalized();
+			Vector2 direction = (target.Position - Position).Normalized();
 
-			state.LinearVelocity = direction * (float)speed;
+			state.LinearVelocity = direction * speed;
 		}
 	}
 
@@ -50,4 +52,3 @@ public partial class Bullet : RigidBody2D
 			(body as Mob).TakeDamage(damage);
 	}
 }
-

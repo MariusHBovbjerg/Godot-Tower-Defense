@@ -7,12 +7,17 @@ public partial class Main : Node
 	public PackedScene MobScene { get; set; }
 	private HUD _hud;
 	private Player _player;
+	private EntitySpawner _entitySpawner;
+	private Texture2D _mobTexture = GD.Load<Texture2D>("res://art/basic.png");
+	private RandomRadialSpawnStrategy _randomRadialSpawnStrategy;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		_hud = GetNode<HUD>("HUD");
 		_player = GetNode<Player>("Player");
+		_entitySpawner = new EntitySpawner();
+		_randomRadialSpawnStrategy = new RandomRadialSpawnStrategy(_player.Position, 500);
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -36,29 +41,12 @@ public partial class Main : Node
 
 	private void OnMobTimerTimeout()
 	{
-		// Create a new instance of the Mob scene.
-		Mob mob = MobScene.Instantiate<Mob>();
-
-		// Choose a random location on Path2D.
-		var mobSpawnLocation = GetNode<PathFollow2D>("MobPath/MobSpawnLocation");
-		mobSpawnLocation.ProgressRatio = GD.Randf();
-
-		// Set the mob's direction perpendicular to the path direction.
-		float direction = mobSpawnLocation.Rotation + Mathf.Pi / 2;
-
-		// Set the mob's position to a random location.
-		mob.Position = mobSpawnLocation.Position;
-
-		// Add some randomness to the direction.
-		direction += (float)GD.RandRange(-Mathf.Pi / 4, Mathf.Pi / 4);
-		mob.Rotation = direction;
-
-		// Choose the velocity.
-		var velocity = new Vector2((float)GD.RandRange(150.0, 250.0), 0);
-		mob.LinearVelocity = velocity.Rotated(direction);
-
-		// Spawn the mob by adding it to the Main scene.
-		AddChild(mob);
+		_entitySpawner.spawnEntityUsingStrategy(
+			this,
+			new MobBuilder(),
+			_mobTexture,
+			new Vector2(0.3f, 0.3f),
+			_randomRadialSpawnStrategy);
 	}
 
 	private void OnStartTimerTimeout()

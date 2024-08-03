@@ -53,6 +53,7 @@ public partial class HUD : CanvasLayer
 		{
 			if (IsInstanceValid(_upgradeScrollContainer))
 				_upgradeScrollContainer.QueueFree();
+
 			if (_activeMenuType == StatType.Offensive)
 			{
 				_activeMenuType = StatType.None;
@@ -65,6 +66,7 @@ public partial class HUD : CanvasLayer
 		{
 			if (IsInstanceValid(_upgradeScrollContainer))
 				_upgradeScrollContainer.QueueFree();
+
 			if (_activeMenuType == StatType.Defensive)
 			{
 				_activeMenuType = StatType.None;
@@ -77,6 +79,7 @@ public partial class HUD : CanvasLayer
 		{
 			if (IsInstanceValid(_upgradeScrollContainer))
 				_upgradeScrollContainer.QueueFree();
+
 			if (_activeMenuType == StatType.Economic)
 			{
 				_activeMenuType = StatType.None;
@@ -99,6 +102,7 @@ public partial class HUD : CanvasLayer
 		await ToSignal(messageTimer, Timer.SignalName.Timeout);
 
 		GetTree().CallGroup("mobs", Node.MethodName.QueueFree);
+		GetTree().CallGroup("bullets", Node.MethodName.QueueFree);
 
 		_message.Text = "Dodge the Creeps!";
 		_message.Show();
@@ -114,7 +118,6 @@ public partial class HUD : CanvasLayer
 		_cashLabel.Text = $"${_player.Stats.CashBalance}";
 		_coinLabel.Text = $"{_player.Stats.CoinBalance} Coins";
 	}
-
 
 	private void OnStartButtonPressed()
 	{
