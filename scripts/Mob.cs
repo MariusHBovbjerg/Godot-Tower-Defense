@@ -54,8 +54,8 @@ public partial class Mob : RigidBody2D
 		if (Stats.CurrentHealth <= 0)
 		{
 			// Add some cash and coins to the player's balance
-			_player.Stats.CashBalance += Stats.CashDropValue;
-			_player.Stats.CoinBalance += Stats.CoinDropValue;
+			_player.Stats.CashBalance += (int)(Stats.CashDropValue * _player.Stats.CashMultiplier.GetValue());
+			_player.Stats.CoinBalance += (int)(Stats.CoinDropValue * _player.Stats.CoinMultiplier.GetValue());
 
 			Free();
 		}
@@ -64,6 +64,5 @@ public partial class Mob : RigidBody2D
 	private void OnDamageCooldownTimeout()
 	{
 		CanDamage = true;
-		GD.Print($"{this} can attack again!");
 	}
 }

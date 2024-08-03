@@ -1,12 +1,12 @@
 using System;
 using Godot;
 
-
 public enum StatType
 {
 	Offensive,
 	Defensive,
-	Economic
+	Economic,
+	None
 }
 
 public class Stat

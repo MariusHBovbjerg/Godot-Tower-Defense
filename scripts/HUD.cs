@@ -10,8 +10,9 @@ public partial class HUD : CanvasLayer
 	private Label _damageLabel;
 	private Control _playerStatView;
 	private Player _player;
-	private ScrollContainer _upgradeContainer;
-	private HBoxContainer _upgradeHBox;
+	private Control _upgradeMenu;
+	private ScrollContainer _upgradeScrollContainer;
+	private StatType _activeMenuType = StatType.Offensive;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -25,9 +26,6 @@ public partial class HUD : CanvasLayer
 		_damageLabel = _playerStatView.GetNode<Label>("Damage");
 		_playerStatView.Hide();
 		_cashLabel.Hide();
-
-		_upgradeContainer = GetNode<ScrollContainer>("UpgradeMenu");
-		_upgradeContainer.Hide();
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -46,11 +44,55 @@ public partial class HUD : CanvasLayer
 		GetNode<Timer>("MessageTimer").Start();
 	}
 
+	public void InitializeNewRound()
+	{
+		_playerStatView.Show();
+		_cashLabel.Show();
+		(_upgradeMenu, _upgradeScrollContainer) = UpgradeMenu.InitializeUpgradeMenu(_player, _activeMenuType,
+		() =>
+		{
+			if (IsInstanceValid(_upgradeScrollContainer))
+				_upgradeScrollContainer.QueueFree();
+			if (_activeMenuType == StatType.Offensive)
+			{
+				_activeMenuType = StatType.None;
+				return;
+			}
+			_activeMenuType = StatType.Offensive;
+			_upgradeScrollContainer = UpgradeMenu.CreateUpgrades(StatType.Offensive, _upgradeMenu, _player);
+		},
+		() =>
+		{
+			if (IsInstanceValid(_upgradeScrollContainer))
+				_upgradeScrollContainer.QueueFree();
+			if (_activeMenuType == StatType.Defensive)
+			{
+				_activeMenuType = StatType.None;
+				return;
+			}
+			_activeMenuType = StatType.Defensive;
+			_upgradeScrollContainer = UpgradeMenu.CreateUpgrades(StatType.Defensive, _upgradeMenu, _player);
+		},
+		() =>
+		{
+			if (IsInstanceValid(_upgradeScrollContainer))
+				_upgradeScrollContainer.QueueFree();
+			if (_activeMenuType == StatType.Economic)
+			{
+				_activeMenuType = StatType.None;
+				return;
+			}
+			_activeMenuType = StatType.Economic;
+			_upgradeScrollContainer = UpgradeMenu.CreateUpgrades(StatType.Economic, _upgradeMenu, _player);
+		});
+		AddChild(_upgradeMenu);
+		UpdateDetails();
+	}
+
 	public async void ShowGameOver()
 	{
-		_upgradeHBox.QueueFree();
+		_upgradeMenu.QueueFree();
 		_playerStatView.Hide();
-		_upgradeContainer.Hide();
 		ShowMessage("Game Over");
 
 		var messageTimer = GetNode<Timer>("MessageTimer");
@@ -73,111 +115,6 @@ public partial class HUD : CanvasLayer
 		_coinLabel.Text = $"{_player.Stats.CoinBalance} Coins";
 	}
 
-	public void InitializeNewRound()
-	{
-		_playerStatView.Show();
-		_cashLabel.Show();
-
-		_upgradeHBox = new HBoxContainer();
-		var upgradeColumn1 = new VBoxContainer();
-		var upgradeColumn2 = new VBoxContainer();
-		var upgradeColumn3 = new VBoxContainer();
-
-		_upgradeHBox.AddChild(upgradeColumn1);
-		_upgradeHBox.AddChild(upgradeColumn2);
-		_upgradeHBox.AddChild(upgradeColumn3);
-
-		_upgradeContainer.AddChild(_upgradeHBox);
-
-		var playerStats = _player.Stats;
-
-		var statPropertiesInPlayerStats = playerStats.GetType().GetProperties();
-
-		var statCount = statPropertiesInPlayerStats.Length;
-		var count = 0;
-
-		foreach (var stat in statPropertiesInPlayerStats)
-		{
-			if (stat.PropertyType == typeof(Stat))
-			{
-				var entity = (Stat)stat.GetValue(playerStats);
-
-				var upgradeContainer = (count % 3) switch
-				{
-					0 => upgradeColumn1,
-					1 => upgradeColumn2,
-					2 => upgradeColumn3,
-					_ => throw new Exception("This should never happen")
-				};
-
-				Control upgradeComposite = new Control
-				{
-					CustomMinimumSize = new Vector2(234, 50),
-				};
-
-				Label nameLabel = new Label
-				{
-					Text = entity.Name,
-					VerticalAlignment = VerticalAlignment.Center,
-					HorizontalAlignment = HorizontalAlignment.Center,
-					// Name sits in the top left corner of the upgrade container
-					OffsetTop = 0,
-					OffsetLeft = 0,
-				};
-
-				Label priceLabel = new Label
-				{
-					Text = $"${entity.NextLevelCost()}",
-					VerticalAlignment = VerticalAlignment.Center,
-					HorizontalAlignment = HorizontalAlignment.Center,
-					// price is underneath the name
-					OffsetTop = 15,
-					OffsetLeft = 0,
-				};
-
-				Label currentLevelLabel = new Label
-				{
-					Text = $"Level: {entity.Level}",
-					VerticalAlignment = VerticalAlignment.Center,
-					HorizontalAlignment = HorizontalAlignment.Center,
-					// level is underneath the price
-					OffsetTop = 30,
-					OffsetLeft = 0,
-				};
-
-				Button upgradeButton = new Button
-				{
-					// Only show two decimal places
-					Text = $"{entity.GetValueAsFormattedString()} -> {entity.GetNextLevelvalueAsFormattedString()}",
-					CustomMinimumSize = new Vector2(100, 50),
-					// Button sits to the right of the name, price and level
-					OffsetTop = 0,
-					OffsetLeft = 100,
-				};
-
-				upgradeButton.Pressed += () =>
-				{
-					entity.LevelUp(_player);
-					var isMaxLevel = entity.Level == entity.MaxLevel;
-					currentLevelLabel.Text = isMaxLevel ? "Max level" : $"Level: {entity.Level}";
-					priceLabel.Text = isMaxLevel ? "Max" : $"${entity.NextLevelCost()}";
-					upgradeButton.Text = $"{entity.GetValueAsFormattedString()} -> {entity.GetNextLevelvalueAsFormattedString()}";
-
-				};
-
-				// Add the label and button to the upgrade container
-				upgradeComposite.AddChild(nameLabel);
-				upgradeComposite.AddChild(upgradeButton);
-				upgradeComposite.AddChild(priceLabel);
-				upgradeComposite.AddChild(currentLevelLabel);
-
-				upgradeContainer.AddChild(upgradeComposite);
-
-				count++;
-			}
-		}
-		_upgradeContainer.Show();
-	}
 
 	private void OnStartButtonPressed()
 	{

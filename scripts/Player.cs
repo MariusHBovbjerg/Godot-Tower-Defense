@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 public partial class Player : RigidBody2D
@@ -31,8 +32,10 @@ public partial class Player : RigidBody2D
 	[Signal]
 	public delegate void DeathEventHandler();
 
-	private Timer _shootingTimer;
+	public Timer ShootingTimer;
+	private Timer _rapidFireTimer;
 	private bool _canShoot = true;
+	private bool _isRapidFiring = false;
 
 	public Sprite2D RangeIndicator { get; set; }
 
@@ -42,7 +45,8 @@ public partial class Player : RigidBody2D
 		Hide();
 		isDead = true;
 
-		_shootingTimer = GetNode<Timer>("ShootingTimer");
+		ShootingTimer = GetNode<Timer>("ShootingTimer");
+		_rapidFireTimer = GetNode<Timer>("RapidFireTimer");
 		var range = Stats.Range.GetValue();
 		RangeIndicator = GetNode<Sprite2D>("RangeIndicator");
 		RangeIndicator.Scale = new Vector2((float)range / 150, (float)range / 150);
@@ -61,11 +65,6 @@ public partial class Player : RigidBody2D
 			// Must be deferred as we can't change physics properties on a physics callback.
 			GetNode<CollisionShape2D>("CollisionShape2D").SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
 		}
-
-		var FiringRate = Stats.FiringRate.GetValue();
-		var inverseFiringRate = 1 / FiringRate;
-		if (_shootingTimer.WaitTime != inverseFiringRate)
-			_shootingTimer.WaitTime = inverseFiringRate;
 	}
 
 	private void OnBodyEntered(Node2D body)
@@ -84,29 +83,49 @@ public partial class Player : RigidBody2D
 		Show();
 		GetNode<CollisionShape2D>("CollisionShape2D").Disabled = false;
 		_canShoot = true;
-		_shootingTimer.WaitTime = 1 / Stats.FiringRate.GetValue();
-		_shootingTimer.Start();
+		ShootingTimer.Start();
 	}
 
 	private void OnShootingTimerTimeout()
 	{
-		_shootingTimer.Start();
+		ShootingTimer.Start();
 		if (!_canShoot)
 			return;
 
-		// Grab a mob from the mobs group.
+		// Find all valid mobs within range.
+		Dictionary<Mob, float> mobTargets = FindValidMobTargets();
+
+		if (mobTargets.Count == 0)
+			return;
+
+		var random = new Random();
+		HandleRapidFire(random);
+
+		mobTargets = HandleMultiShot(random, mobTargets);
+
+		mobTargets.Select(x => x.Key).ToList().ForEach(mob =>
+		{
+			Bullet bullet = BulletScene.Instantiate<Bullet>();
+			GetParent().AddChild(bullet);
+
+			Vector2 direction = (mob.Position - Position).Normalized();
+			bullet.ConfigureBullet(Stats.Damage.GetValue(), (float)Stats.ShotSpeed.GetValue(), Position + direction * 25, mob);
+		});
+	}
+
+	private Dictionary<Mob, float> FindValidMobTargets()
+	{
 		var mobs = GetTree().GetNodesInGroup("mobs");
 		var bullets = GetTree().GetNodesInGroup("bullets");
-
-		// Find the closest mob to the player.
-		Mob mob = null;
+		Dictionary<Mob, float> mobTargets = new();
 
 		foreach (Node node in mobs)
 		{
 			if (node is Mob mobNode && IsInstanceValid(mobNode))
 			{
+				var distance = mobNode.Position.DistanceTo(Position);
 				// Evaluate if mob is within player range.
-				if (mobNode.Position.DistanceTo(Position) > Stats.Range.GetValue())
+				if (distance > Stats.Range.GetValue())
 					continue;
 
 				// count how many bullets already target this mob, add their damage together and compare to the mob's health.
@@ -117,23 +136,69 @@ public partial class Player : RigidBody2D
 				if (mobHealth <= bulletDamage)
 					continue;
 
-				if (mob == null)
-					mob = mobNode;
-				else
-				{
-					if (mob.Position.DistanceTo(Position) > mobNode.Position.DistanceTo(Position))
-						mob = mobNode;
-				}
+				mobTargets.Add(mobNode, distance);
 			}
 		}
 
-		if (mob == null)
-			return;
+		return mobTargets;
+	}
 
-		Bullet bullet = BulletScene.Instantiate<Bullet>();
-		GetParent().AddChild(bullet);
+	private Dictionary<Mob, float> HandleMultiShot(Random random, Dictionary<Mob, float> mobTargets)
+	{
+		if (Stats.MultiShotChance.GetValue() > 0)
+		{
+			var chance = random.Next(0, 100);
+			if (chance < Stats.MultiShotChance.GetValue())
+			{
+				var multiShotCount = (int)Stats.MultiShotCount.GetValue() + 1;
+				if (mobTargets.Count > multiShotCount)
+				{
+					mobTargets = mobTargets.OrderBy(x => x.Value).Take(multiShotCount).ToDictionary(x => x.Key, x => x.Value);
+				}
+			}
+			else
+			{
+				// If the roll is unsuccessful, only target the closest mob.
+				if (mobTargets.Count > 1)
+				{
+					var closestMob = mobTargets.OrderBy(x => x.Value).First();
+					mobTargets.Clear();
+					mobTargets.Add(closestMob.Key, closestMob.Value);
+				}
+			}
+		}
+		else
+		{
+			// If the player doesn't have the ability, only target the closest mob.
+			if (mobTargets.Count > 1)
+			{
+				var closestMob = mobTargets.OrderBy(x => x.Value).First();
+				mobTargets.Clear();
+				mobTargets.Add(closestMob.Key, closestMob.Value);
+			}
+		}
 
-		Vector2 direction = (mob.Position - Position).Normalized();
-		bullet.ConfigureBullet(Stats.Damage.GetValue(), (float)Stats.ShotSpeed.GetValue(), Position + direction * 25, mob);
+		return mobTargets;
+	}
+
+	private void HandleRapidFire(Random random)
+	{
+		if (Stats.RapidFireChance.GetValue() > 0 && !_isRapidFiring)
+		{
+			var chance = random.Next(0, 100);
+			if (chance < Stats.RapidFireChance.GetValue())
+			{
+				_isRapidFiring = true;
+				ShootingTimer.WaitTime = 1 / (Stats.FiringRate.GetValue() * 5);
+				_rapidFireTimer.WaitTime = Stats.RapidFireDuration.GetValue();
+				_rapidFireTimer.Start();
+			}
+		}
+	}
+
+	private void OnFastFireTimeout()
+	{
+		_isRapidFiring = false;
+		ShootingTimer.WaitTime = 1 / Stats.FiringRate.GetValue();
 	}
 }

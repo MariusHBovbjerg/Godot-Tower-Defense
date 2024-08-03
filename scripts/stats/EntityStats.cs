@@ -43,7 +43,7 @@ public partial class PlayerStats : EntityStats
 	public Stat CashMultiplier { get; set; } = new()
 	{
 		Type = StatType.Economic,
-		Name = "CashMultiplier",
+		Name = "Cash Multiplier",
 		StartingValue = 1,
 		UpgradeMultiplier = 1.1f,
 		StartingCost = 10,
@@ -57,7 +57,7 @@ public partial class PlayerStats : EntityStats
 	public Stat CoinMultiplier { get; set; } = new()
 	{
 		Type = StatType.Economic,
-		Name = "CoinMultiplier",
+		Name = "Coin Multiplier",
 		StartingValue = 1,
 		UpgradeMultiplier = 1.1f,
 		StartingCost = 10,
@@ -71,21 +71,25 @@ public partial class PlayerStats : EntityStats
 	public Stat FiringRate { get; set; } = new()
 	{
 		Type = StatType.Offensive,
-		Name = "FiringRate",
-		StartingValue = 10,
+		Name = "Firing Rate",
+		StartingValue = 1,
 		UpgradeMultiplier = 1.15f,
 		StartingCost = 5,
 		CostIncreaseValue = 1.1f,
 		Level = 1,
 		MaxLevel = 10,
 		GetValueCallback = (level, startingValue, upgradeMultiplier) => startingValue * Math.Pow(upgradeMultiplier, level - 1),
-		NextLevelCostCallback = (level, cost, costIncreaseValue) => (int)(cost * Math.Pow(costIncreaseValue, level - 1))
+		NextLevelCostCallback = (level, cost, costIncreaseValue) => (int)(cost * Math.Pow(costIncreaseValue, level - 1)),
+		LevelUpCallback = (player) =>
+		{
+			player.ShootingTimer.WaitTime = 1 / player.Stats.FiringRate.GetValue();
+		}
 	};
 
 	public Stat CriticalHitChance { get; set; } = new()
 	{
 		Type = StatType.Offensive,
-		Name = "CriticalHitChance",
+		Name = "Critical Hit %",
 		StartingValue = 0,
 		UpgradeMultiplier = 1.1f,
 		StartingCost = 10,
@@ -99,7 +103,7 @@ public partial class PlayerStats : EntityStats
 	public Stat CriticalHitDamageFactor { get; set; } = new()
 	{
 		Type = StatType.Offensive,
-		Name = "CriticalHitDamageFactor",
+		Name = "Critical Factor",
 		StartingValue = 1,
 		UpgradeMultiplier = 1.1f,
 		StartingCost = 10,
@@ -114,7 +118,7 @@ public partial class PlayerStats : EntityStats
 	{
 		Type = StatType.Offensive,
 		Name = "Range",
-		StartingValue = 50,
+		StartingValue = 100,
 		UpgradeMultiplier = 1.1f,
 		StartingCost = 10,
 		CostIncreaseValue = 1.1f,
@@ -125,7 +129,6 @@ public partial class PlayerStats : EntityStats
 		LevelUpCallback = (player) =>
 		{
 			var range = player.Stats.Range.GetValue();
-			// The scale is about half the range, so we need to divide by 200
 			player.RangeIndicator.Scale = new Vector2((float)range / 150, (float)range / 150);
 		},
 	};
@@ -133,49 +136,49 @@ public partial class PlayerStats : EntityStats
 	public Stat MultiShotChance { get; set; } = new()
 	{
 		Type = StatType.Offensive,
-		Name = "MultiShotChance",
+		Name = "Multi Shot %",
 		StartingValue = 0,
-		UpgradeMultiplier = 1.1f,
+		UpgradeMultiplier = 3,
 		StartingCost = 10,
 		CostIncreaseValue = 1.1f,
-		Level = 1,
+		Level = 0,
 		MaxLevel = 10,
-		GetValueCallback = (level, startingValue, upgradeMultiplier) => startingValue * Math.Pow(upgradeMultiplier, level - 1),
+		GetValueCallback = (level, startingValue, upgradeMultiplier) => startingValue + level * upgradeMultiplier,
 		NextLevelCostCallback = (level, cost, costIncreaseValue) => (int)(cost * Math.Pow(costIncreaseValue, level - 1))
 	};
 
 	public Stat MultiShotCount { get; set; } = new()
 	{
 		Type = StatType.Offensive,
-		Name = "MultiShotCount",
-		StartingValue = 1,
-		UpgradeMultiplier = 1.1f,
+		Name = "Multi Shot Count",
+		StartingValue = 0,
+		UpgradeMultiplier = 1,
 		StartingCost = 10,
 		CostIncreaseValue = 1.1f,
-		Level = 1,
+		Level = 0,
 		MaxLevel = 5,
-		GetValueCallback = (level, startingValue, upgradeMultiplier) => (int)(startingValue + (level - 1) * upgradeMultiplier),
+		GetValueCallback = (level, startingValue, upgradeMultiplier) => (int)(startingValue + level * upgradeMultiplier),
 		NextLevelCostCallback = (level, cost, costIncreaseValue) => (int)(cost + (level - 1) * costIncreaseValue)
 	};
 
 	public Stat RapidFireChance { get; set; } = new()
 	{
 		Type = StatType.Offensive,
-		Name = "RapidFireChance",
+		Name = "Rapid Fire %",
 		StartingValue = 0,
-		UpgradeMultiplier = 1.1f,
+		UpgradeMultiplier = 5.0f,
 		StartingCost = 10,
 		CostIncreaseValue = 1.1f,
-		Level = 1,
+		Level = 0,
 		MaxLevel = 10,
-		GetValueCallback = (level, startingValue, upgradeMultiplier) => startingValue * Math.Pow(upgradeMultiplier, level - 1),
+		GetValueCallback = (level, startingValue, upgradeMultiplier) => startingValue + level * upgradeMultiplier,
 		NextLevelCostCallback = (level, cost, costIncreaseValue) => (int)(cost * Math.Pow(costIncreaseValue, level - 1))
 	};
 
 	public Stat RapidFireDuration { get; set; } = new()
 	{
 		Type = StatType.Offensive,
-		Name = "RapidFireDuration",
+		Name = "Rapid Fire Duration",
 		StartingValue = 1,
 		UpgradeMultiplier = 1.1f,
 		StartingCost = 10,
@@ -189,7 +192,7 @@ public partial class PlayerStats : EntityStats
 	public Stat BounceChance { get; set; } = new()
 	{
 		Type = StatType.Offensive,
-		Name = "BounceChance",
+		Name = "Bounce %",
 		StartingValue = 0,
 		UpgradeMultiplier = 1.1f,
 		StartingCost = 10,
@@ -203,7 +206,7 @@ public partial class PlayerStats : EntityStats
 	public Stat BounceCount { get; set; } = new()
 	{
 		Type = StatType.Offensive,
-		Name = "BounceCount",
+		Name = "Bounce Count",
 		StartingValue = 1,
 		UpgradeMultiplier = 1.1f,
 		StartingCost = 10,
@@ -217,7 +220,7 @@ public partial class PlayerStats : EntityStats
 	public Stat BounceRange { get; set; } = new()
 	{
 		Type = StatType.Offensive,
-		Name = "BounceRange",
+		Name = "Bounce Range",
 		StartingValue = 1,
 		UpgradeMultiplier = 1.1f,
 		StartingCost = 10,
@@ -231,7 +234,7 @@ public partial class PlayerStats : EntityStats
 	public Stat ShotSpeed { get; set; } = new()
 	{
 		Type = StatType.Offensive,
-		Name = "ShotSpeed",
+		Name = "Shot Speed",
 		StartingValue = 100,
 		UpgradeMultiplier = 1.025f,
 		StartingCost = 10,
