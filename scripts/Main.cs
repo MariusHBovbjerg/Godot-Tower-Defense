@@ -16,7 +16,7 @@ public partial class Main : Node
 	{
 		_hud = GetNode<HUD>("HUD");
 		_player = GetNode<Player>("Player");
-		_entitySpawner = new EntitySpawner();
+		_entitySpawner = new EntitySpawner(OnEntityReadyHandler);
 		_randomRadialSpawnStrategy = new RandomRadialSpawnStrategy(_player.Position, 500);
 	}
 
@@ -24,6 +24,11 @@ public partial class Main : Node
 	public override void _Process(double delta)
 	{
 		_hud.UpdateDetails();
+	}
+
+	public void OnEntityReadyHandler(Node2D entity)
+	{
+		AddChild(entity);
 	}
 
 	public void InitializeNewRound()
@@ -42,7 +47,6 @@ public partial class Main : Node
 	private void OnMobTimerTimeout()
 	{
 		_entitySpawner.spawnEntityUsingStrategy(
-			this,
 			new MobBuilder(),
 			_mobTexture,
 			new Vector2(0.3f, 0.3f),
