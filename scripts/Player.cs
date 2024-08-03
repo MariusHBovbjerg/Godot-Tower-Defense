@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-public partial class Player : RigidBody2D
+public partial class Player : RigidBody2D, IDamageable
 {
 	public PlayerStats Stats = new PlayerStats
 	{
@@ -55,7 +55,15 @@ public partial class Player : RigidBody2D
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
-		if (Stats.CurrentHealth <= 0 && !isDead)
+	}
+
+	public void TakeDamage(double damage)
+	{
+		if (isDead)
+			return;
+
+		Stats.CurrentHealth -= damage;
+		if (Stats.CurrentHealth <= 0)
 		{
 			Stats.CashBalance = 0;
 			isDead = true;
@@ -65,15 +73,6 @@ public partial class Player : RigidBody2D
 			// Must be deferred as we can't change physics properties on a physics callback.
 			GetNode<CollisionShape2D>("CollisionShape2D").SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
 		}
-	}
-
-	private void OnBodyEntered(Node2D body)
-	{
-		if (body is not Mob)
-			return;
-
-		if ((body as Mob).CanDamage)
-			Stats.CurrentHealth = (body as Mob).DoDamage(Stats.CurrentHealth);
 	}
 
 	public void InitializeNewRound()

@@ -41,6 +41,10 @@ public partial class Main : Node
 	public void StopRound()
 	{
 		_hud.ShowGameOver();
+
+		GetTree().CallGroup("mobs", Node.MethodName.QueueFree);
+		GetTree().CallGroup("bullets", Node.MethodName.QueueFree);
+
 		GetNode<Timer>("MobTimer").Stop();
 	}
 

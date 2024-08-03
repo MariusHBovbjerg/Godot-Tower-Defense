@@ -101,9 +101,6 @@ public partial class HUD : CanvasLayer
 		var messageTimer = GetNode<Timer>("MessageTimer");
 		await ToSignal(messageTimer, Timer.SignalName.Timeout);
 
-		GetTree().CallGroup("mobs", Node.MethodName.QueueFree);
-		GetTree().CallGroup("bullets", Node.MethodName.QueueFree);
-
 		_message.Text = "Dodge the Creeps!";
 		_message.Show();
 

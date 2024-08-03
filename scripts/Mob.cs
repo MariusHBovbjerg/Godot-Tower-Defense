@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public partial class Mob : RigidBody2D
+public partial class Mob : RigidBody2D, IDamageable
 {
 	public static readonly string GROUP_NAME = "mobs";
 	private Player _player;
@@ -17,22 +17,27 @@ public partial class Mob : RigidBody2D
 	public Sprite2D Sprite;
 
 	public Timer DamageCooldown;
+	public CollisionShape2D CollisionShape;
 
 	public Mob(Sprite2D sprite, CollisionShape2D collisionShape, Timer damageCooldown, Vector2 position)
 	{
 		Position = position;
 		AddToGroup(GROUP_NAME);
 		Sprite = sprite;
-		DamageCooldown = damageCooldown;
-		damageCooldown.Timeout += OnDamageCooldownTimeout;
 		AddChild(Sprite);
-		AddChild(collisionShape);
-		AddChild(damageCooldown);
+
+		DamageCooldown = damageCooldown;
+		DamageCooldown.Timeout += OnDamageCooldownTimeout;
+		AddChild(DamageCooldown);
+
+		CollisionShape = collisionShape;
+		AddChild(CollisionShape);
 
 		ContinuousCd = CcdMode.CastRay;
 		ContactMonitor = true;
 		MaxContactsReported = 100;
 		GravityScale = 0;
+		this.BodyEntered += OnBodyEntered;
 	}
 
 	// Called when the node enters the scene tree for the first time.
@@ -86,5 +91,11 @@ public partial class Mob : RigidBody2D
 	private void OnDamageCooldownTimeout()
 	{
 		CanDamage = true;
+	}
+
+	private void OnBodyEntered(Node body)
+	{
+		if (CanDamage && body is Player)
+			(body as Player).TakeDamage(Stats.Damage.GetValue());
 	}
 }
